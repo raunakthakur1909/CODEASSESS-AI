@@ -1,0 +1,93 @@
+services:
+  # ─────────────────────────────────────────────
+  # App Database
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:18
+    container_name: codeassess-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_v18:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Judge0 CE – self-hosted code execution engine
+  # ─────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    container_name: codeassess-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED}
+      ADMIN_BOOTSTRAP_NAME: ${ADMIN_BOOTSTRAP_NAME}
+      ADMIN_BOOTSTRAP_EMAIL: ${ADMIN_BOOTSTRAP_EMAIL}
+      ADMIN_BOOTSTRAP_PASSWORD: ${ADMIN_BOOTSTRAP_PASSWORD}
+      JUDGE0_ENABLED: ${JUDGE0_ENABLED:-false}
+      JUDGE0_BASE_URL: ${JUDGE0_BASE_URL:-http://judge0-server:2358}
+      JUDGE0_API_KEY: ${JUDGE0_API_KEY:-}
+      JUDGE0_API_HOST: ${JUDGE0_API_HOST:-}
+      AI_REVIEW_ENABLED: ${AI_REVIEW_ENABLED}
+      AI_PROVIDER: ${AI_PROVIDER}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_BASE_URL: ${AI_BASE_URL}
+      AI_MODEL: ${AI_MODEL}
+      AI_MAX_SOURCE_CODE_LENGTH: ${AI_MAX_SOURCE_CODE_LENGTH}
+      AI_MAX_PROMPT_LENGTH: ${AI_MAX_PROMPT_LENGTH}
+      AI_MAX_ATTEMPTS: ${AI_MAX_ATTEMPTS}
+      AI_RETRY_DELAY_SECONDS: ${AI_RETRY_DELAY_SECONDS}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─────────────────────────────────────────────
+  # Frontend (React + nginx)
+  # ─────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+    container_name: codeassess-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/ > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data_v18:
+
+

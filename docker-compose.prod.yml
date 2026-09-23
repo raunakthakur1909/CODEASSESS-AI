@@ -1,0 +1,16 @@
+services:
+  postgres:
+    ports: !reset
+      - target: 5432
+        published: "5432"
+        protocol: tcp
+        host_ip: 127.0.0.1
+
+  backend:
+    ports: !reset               # Remove external :8080 — traffic via Nginx only
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+
+  frontend:
+    ports:
+      - "80:80"                 # Only Nginx is public-facing
