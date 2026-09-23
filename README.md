@@ -7,9 +7,12 @@ A full-stack, AI-powered coding assessment platform for automated technical inte
 **Live Demo**: Not currently deployed.
 
 **Demo Credentials**:
-- **Admin**: `admin@codeassess.local`
-- **Candidate**: `candidate@codeassess.local`
-*(Note: These are safe, isolated demo accounts with seeded mock data.)*
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `admin@codeassess.local` | `AdminSecure123` |
+| Candidate | `candidate@codeassess.local` | `CandidatePass123` |
+
+*(Demo accounts with seeded assessment data — safe for public demo use.)*
 
 ## Features
 
