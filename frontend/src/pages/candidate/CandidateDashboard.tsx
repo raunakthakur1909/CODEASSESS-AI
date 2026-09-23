@@ -135,7 +135,7 @@ export default function CandidateDashboard() {
                 </div>
                 <div className="card-footer">
                   <button 
-                    onClick={() => navigate(`/assessments/${assessment.id}`)}
+                    onClick={() => navigate(`/assessments/${assessment.id}/attempt`)}
                     className="btn btn-primary w-full justify-center"
                   >
                     Start Test

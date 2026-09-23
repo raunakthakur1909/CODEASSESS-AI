@@ -203,7 +203,7 @@ const AssessmentsListPage: React.FC<AssessmentsListPageProps> = () => {
                                         </>
                                     ) : (
                                         <button 
-                                            onClick={() => navigate(`/assessments/${assessment.id}`)}
+                                            onClick={() => navigate(`/assessments/${assessment.id}/attempt`)}
                                             className="btn btn-primary w-full justify-center"
                                         >
                                             <Play size={16} />
