@@ -14,7 +14,17 @@ A full-stack, AI-powered coding assessment platform for automated technical inte
 
 *(Demo accounts with seeded assessment data — safe for public demo use.)*
 
-## Features
+## Screenshots
+
+| Login | Candidate Dashboard |
+|-------|-------------------|
+| ![Login](docs/screenshots/login.png) | ![Dashboard](docs/screenshots/candidate_dashboard.png) |
+
+| Assessments List | Admin Dashboard |
+|------------------|----------------|
+| ![Assessments](docs/screenshots/assessments_list.png) | ![Admin](docs/screenshots/admin_dashboard.png) |
+
+
 
 - **Role-based Authentication**: Secure JWT-based access for Admin and Candidate roles.
 - **Assessment Management**: Create, manage, and assign multi-problem assessments.
