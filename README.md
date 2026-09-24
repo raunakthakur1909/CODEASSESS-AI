@@ -23,7 +23,7 @@ A full-stack, AI-powered coding assessment platform for automated technical inte
 | Assessments List | Admin Dashboard |
 |------------------|----------------|
 | ![Assessments](docs/screenshots/assessments_list.png) | ![Admin](docs/screenshots/admin_dashboard.png) |
-
+## Features
 
 
 - **Role-based Authentication**: Secure JWT-based access for Admin and Candidate roles.
@@ -57,7 +57,7 @@ graph LR
 
 ## Tech Stack
 
-- **Frontend**: React, TypeScript, Vite, Monaco Editor, Tailwind CSS
+- **Frontend**: React, TypeScript, Vite, Monaco Editor, Vanilla CSS
 - **Backend**: Java 25, Spring Boot 3
 - **Database**: PostgreSQL 18, Flyway Migrations
 - **Execution Engine**: Mocked evaluation (Judge0 compatible)
@@ -97,7 +97,7 @@ graph LR
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/codeassess-ai.git
+   git clone https://github.com/raunakthakur1909/codeassess-ai.git
    cd codeassess-ai
    ```
 
