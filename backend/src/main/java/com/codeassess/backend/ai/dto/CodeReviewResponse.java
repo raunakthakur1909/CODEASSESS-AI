@@ -2,8 +2,12 @@ package com.codeassess.backend.ai.dto;
 
 import com.codeassess.backend.ai.CodeReview;
 import com.codeassess.backend.ai.CodeReviewIssue;
+import com.codeassess.backend.ai.CodeReviewEdgeCase;
+import com.codeassess.backend.ai.CodeReviewFailureDiagnosis;
+import com.codeassess.backend.ai.CodeReviewOptimization;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 public class CodeReviewResponse {
@@ -20,6 +24,12 @@ public class CodeReviewResponse {
     private List<String> strengths;
     private List<String> optimizationSuggestions;
     private List<String> securityIssues;
+
+    private String correctedCode;
+    private String explanationOfCorrection;
+    private CodeReviewOptimization optimizationAnalysis;
+    private List<CodeReviewEdgeCase> generatedEdgeCases;
+    private List<CodeReviewFailureDiagnosis> failureDiagnoses;
 
     private List<CodeReviewIssueResponse> issues;
 
@@ -40,16 +50,20 @@ public class CodeReviewResponse {
         response.summary = review.getSummary();
         response.timeComplexity = review.getComplexityTime();
         response.spaceComplexity = review.getComplexitySpace();
-        response.strengths = review.getStrengths();
-        response.optimizationSuggestions = review.getOptimizationSuggestions();
-        response.securityIssues = review.getSecurityIssues();
+        response.strengths = review.getStrengths() != null ? new ArrayList<>(review.getStrengths()) : new ArrayList<>();
+        response.optimizationSuggestions = review.getOptimizationSuggestions() != null ? new ArrayList<>(review.getOptimizationSuggestions()) : new ArrayList<>();
+        response.securityIssues = review.getSecurityIssues() != null ? new ArrayList<>(review.getSecurityIssues()) : new ArrayList<>();
         response.status = review.getStatus().name();
         response.createdAt = review.getCreatedAt();
         response.completedAt = review.getUpdatedAt();
-        response.issues = review.getIssues()
-                .stream()
-                .map(CodeReviewResponse::toIssueResponse)
-                .toList();
+        response.correctedCode = review.getCorrectedCode();
+        response.explanationOfCorrection = review.getExplanationOfCorrection();
+        response.optimizationAnalysis = review.getOptimizationAnalysis();
+        response.generatedEdgeCases = review.getGeneratedEdgeCases() != null ? new ArrayList<>(review.getGeneratedEdgeCases()) : new ArrayList<>();
+        response.failureDiagnoses = review.getFailureDiagnoses() != null ? new ArrayList<>(review.getFailureDiagnoses()) : new ArrayList<>();
+        response.issues = review.getIssues() != null
+                ? review.getIssues().stream().map(CodeReviewResponse::toIssueResponse).toList()
+                : new ArrayList<>();
 
         return response;
     }
@@ -60,6 +74,9 @@ public class CodeReviewResponse {
         response.setCategory(issue.getCategory());
         response.setMessage(issue.getMessage());
         response.setSuggestion(issue.getSuggestion());
+        response.setLineStart(issue.getLineStart());
+        response.setLineEnd(issue.getLineEnd());
+        response.setTitle(issue.getTitle());
         return response;
     }
 
@@ -114,4 +131,10 @@ public class CodeReviewResponse {
     public LocalDateTime getCompletedAt() {
         return completedAt;
     }
+
+    public String getCorrectedCode() { return correctedCode; }
+    public String getExplanationOfCorrection() { return explanationOfCorrection; }
+    public CodeReviewOptimization getOptimizationAnalysis() { return optimizationAnalysis; }
+    public List<CodeReviewEdgeCase> getGeneratedEdgeCases() { return generatedEdgeCases; }
+    public List<CodeReviewFailureDiagnosis> getFailureDiagnoses() { return failureDiagnoses; }
 }

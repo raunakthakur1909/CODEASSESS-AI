@@ -17,8 +17,12 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Build cache & backups
+*.tsbuildinfo
+*.bak
+*.tmp
+.env
+.env.*
+!.env.example
+.replit-artifact
+

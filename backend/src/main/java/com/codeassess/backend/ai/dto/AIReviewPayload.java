@@ -14,6 +14,12 @@ public class AIReviewPayload {
     private List<String> optimizationSuggestions;
     private List<String> securityIssues;
 
+    private String correctedCode;
+    private String explanationOfCorrection;
+    private AIReviewOptimizationPayload optimizationAnalysis;
+    private List<AIReviewEdgeCasePayload> generatedEdgeCases;
+    private List<AIReviewFailureDiagnosisPayload> failureDiagnoses;
+
     private List<AIReviewIssuePayload> issues;
 
     public AIReviewPayload() {
@@ -82,4 +88,19 @@ public class AIReviewPayload {
     public void setIssues(List<AIReviewIssuePayload> issues) {
         this.issues = issues;
     }
+
+    public String getCorrectedCode() { return correctedCode; }
+    public void setCorrectedCode(String correctedCode) { this.correctedCode = correctedCode; }
+
+    public String getExplanationOfCorrection() { return explanationOfCorrection; }
+    public void setExplanationOfCorrection(String explanationOfCorrection) { this.explanationOfCorrection = explanationOfCorrection; }
+
+    public AIReviewOptimizationPayload getOptimizationAnalysis() { return optimizationAnalysis; }
+    public void setOptimizationAnalysis(AIReviewOptimizationPayload optimizationAnalysis) { this.optimizationAnalysis = optimizationAnalysis; }
+
+    public List<AIReviewEdgeCasePayload> getGeneratedEdgeCases() { return generatedEdgeCases; }
+    public void setGeneratedEdgeCases(List<AIReviewEdgeCasePayload> generatedEdgeCases) { this.generatedEdgeCases = generatedEdgeCases; }
+
+    public List<AIReviewFailureDiagnosisPayload> getFailureDiagnoses() { return failureDiagnoses; }
+    public void setFailureDiagnoses(List<AIReviewFailureDiagnosisPayload> failureDiagnoses) { this.failureDiagnoses = failureDiagnoses; }
 }

@@ -50,6 +50,23 @@ public class CodeReview {
     @CollectionTable(name = "code_review_issues", joinColumns = @JoinColumn(name = "review_id"))
     private List<CodeReviewIssue> issues = new ArrayList<>();
 
+    @Column(columnDefinition = "TEXT")
+    private String correctedCode;
+
+    @Column(columnDefinition = "TEXT")
+    private String explanationOfCorrection;
+
+    @Embedded
+    private CodeReviewOptimization optimizationAnalysis;
+
+    @ElementCollection
+    @CollectionTable(name = "code_review_edge_cases", joinColumns = @JoinColumn(name = "review_id"))
+    private List<CodeReviewEdgeCase> generatedEdgeCases = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "code_review_failure_diagnoses", joinColumns = @JoinColumn(name = "review_id"))
+    private List<CodeReviewFailureDiagnosis> failureDiagnoses = new ArrayList<>();
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ReviewStatus status = ReviewStatus.PENDING;
@@ -133,7 +150,7 @@ public class CodeReview {
     }
 
     public void setStrengths(List<String> strengths) {
-        this.strengths = strengths;
+        this.strengths = strengths != null ? new ArrayList<>(strengths) : new ArrayList<>();
     }
 
     public List<String> getOptimizationSuggestions() {
@@ -141,7 +158,7 @@ public class CodeReview {
     }
 
     public void setOptimizationSuggestions(List<String> optimizationSuggestions) {
-        this.optimizationSuggestions = optimizationSuggestions;
+        this.optimizationSuggestions = optimizationSuggestions != null ? new ArrayList<>(optimizationSuggestions) : new ArrayList<>();
     }
 
     public List<String> getSecurityIssues() {
@@ -149,7 +166,7 @@ public class CodeReview {
     }
 
     public void setSecurityIssues(List<String> securityIssues) {
-        this.securityIssues = securityIssues;
+        this.securityIssues = securityIssues != null ? new ArrayList<>(securityIssues) : new ArrayList<>();
     }
 
     public List<CodeReviewIssue> getIssues() {
@@ -157,7 +174,47 @@ public class CodeReview {
     }
 
     public void setIssues(List<CodeReviewIssue> issues) {
-        this.issues = issues;
+        this.issues = issues != null ? new ArrayList<>(issues) : new ArrayList<>();
+    }
+
+    public String getCorrectedCode() {
+        return correctedCode;
+    }
+
+    public void setCorrectedCode(String correctedCode) {
+        this.correctedCode = correctedCode;
+    }
+
+    public String getExplanationOfCorrection() {
+        return explanationOfCorrection;
+    }
+
+    public void setExplanationOfCorrection(String explanationOfCorrection) {
+        this.explanationOfCorrection = explanationOfCorrection;
+    }
+
+    public CodeReviewOptimization getOptimizationAnalysis() {
+        return optimizationAnalysis;
+    }
+
+    public void setOptimizationAnalysis(CodeReviewOptimization optimizationAnalysis) {
+        this.optimizationAnalysis = optimizationAnalysis;
+    }
+
+    public List<CodeReviewEdgeCase> getGeneratedEdgeCases() {
+        return generatedEdgeCases;
+    }
+
+    public void setGeneratedEdgeCases(List<CodeReviewEdgeCase> generatedEdgeCases) {
+        this.generatedEdgeCases = generatedEdgeCases != null ? new ArrayList<>(generatedEdgeCases) : new ArrayList<>();
+    }
+
+    public List<CodeReviewFailureDiagnosis> getFailureDiagnoses() {
+        return failureDiagnoses;
+    }
+
+    public void setFailureDiagnoses(List<CodeReviewFailureDiagnosis> failureDiagnoses) {
+        this.failureDiagnoses = failureDiagnoses != null ? new ArrayList<>(failureDiagnoses) : new ArrayList<>();
     }
 
     public ReviewStatus getStatus() {

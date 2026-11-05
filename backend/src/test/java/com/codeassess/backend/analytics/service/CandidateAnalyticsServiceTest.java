@@ -25,13 +25,15 @@ class CandidateAnalyticsServiceTest {
     @Mock
     private CodeReviewRepository codeReviewRepository;
 
+    @Mock
+    private com.codeassess.backend.repository.UserRepository userRepository;
 
     private CandidateAnalyticsService candidateAnalyticsService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        candidateAnalyticsService = new CandidateAnalyticsService(submissionRepository, codeReviewRepository);
+        candidateAnalyticsService = new CandidateAnalyticsService(submissionRepository, codeReviewRepository, userRepository);
     }
 
     @Test
@@ -40,6 +42,7 @@ class CandidateAnalyticsServiceTest {
         Long candidateId = 1L;
         User candidate = createUser(candidateId, "John Doe");
 
+        when(userRepository.findById(candidateId)).thenReturn(java.util.Optional.of(candidate));
         when(submissionRepository.countDistinctAssessmentsByCandidate(any(User.class))).thenReturn(2L);
         when(submissionRepository.countByCandidate(any(User.class))).thenReturn(10L);
         when(submissionRepository.countByCandidateAndResult(any(User.class), eq(SubmissionResult.ACCEPTED)))
@@ -54,13 +57,17 @@ class CandidateAnalyticsServiceTest {
         CandidateAnalyticsResponse response = candidateAnalyticsService.getCandidateAnalytics(candidateId);
 
         assertEquals(70.0, response.getAcceptanceRate()); // 7/10 * 100 = 70%
+        assertEquals("John Doe", response.getCandidateName());
+        assertEquals("user1@example.com", response.getCandidateEmail());
     }
 
     @Test
     @DisplayName("Should handle zero submissions")
     void testZeroSubmissions() {
         Long candidateId = 1L;
+        User candidate = createUser(candidateId, "Jane Doe");
 
+        when(userRepository.findById(candidateId)).thenReturn(java.util.Optional.of(candidate));
         when(submissionRepository.countDistinctAssessmentsByCandidate(any(User.class))).thenReturn(0L);
         when(submissionRepository.countByCandidate(any(User.class))).thenReturn(0L);
         when(submissionRepository.countByCandidateAndResult(any(User.class), eq(SubmissionResult.ACCEPTED)))
@@ -83,7 +90,9 @@ class CandidateAnalyticsServiceTest {
     @DisplayName("Should populate all fields correctly")
     void testAllFieldsPopulated() {
         Long candidateId = 1L;
+        User candidate = createUser(candidateId, "Alice");
 
+        when(userRepository.findById(candidateId)).thenReturn(java.util.Optional.of(candidate));
         when(submissionRepository.countDistinctAssessmentsByCandidate(any(User.class))).thenReturn(3L);
         when(submissionRepository.countByCandidate(any(User.class))).thenReturn(15L);
         when(submissionRepository.countByCandidateAndResult(any(User.class), eq(SubmissionResult.ACCEPTED)))
@@ -107,6 +116,8 @@ class CandidateAnalyticsServiceTest {
         assertEquals(80.0, response.getAcceptanceRate()); // 12/15 * 100
         assertEquals(325.5, response.getAverageExecutionTimeMs());
         assertEquals(85.0, response.getAverageAiReviewScore());
+        assertEquals("Alice", response.getCandidateName());
+        assertEquals("user1@example.com", response.getCandidateEmail());
     }
 
     private User createUser(Long id, String name) {

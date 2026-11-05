@@ -54,95 +54,93 @@ class AIProviderTest {
     }
 
     @Test
-    void geminiProviderRejectsEmptyCandidateResponse() {
+    void geminiProviderFallsBackWhenNoCandidateIsReturned() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withSuccess("{\"candidates\":[]}", MediaType.APPLICATION_JSON));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        assertThrows(IllegalStateException.class, () -> provider.reviewCode("review"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
-    void geminiProviderConvertsUnauthorizedResponseToControlledFailure() {
+    void geminiProviderFallsBackAfterUnauthorizedResponse() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> provider.reviewCode("review")
-        );
-        assertTrue(exception.getMessage().contains("401"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
-    void geminiProviderConvertsRateLimitResponseToControlledFailure() {
+    void geminiProviderFallsBackAfterRateLimitResponse() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> provider.reviewCode("review")
-        );
-        assertTrue(exception.getMessage().contains("429"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
-    void geminiProviderConvertsForbiddenResponseToControlledFailure() {
+    void geminiProviderFallsBackAfterForbiddenResponse() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        assertThrows(IllegalStateException.class, () -> provider.reviewCode("review"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
-    void geminiProviderConvertsTimeoutToControlledFailure() {
+    void geminiProviderFallsBackAfterTimeout() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withException(new SocketTimeoutException("read timed out")));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        assertThrows(IllegalStateException.class, () -> provider.reviewCode("review"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
-    void geminiProviderConvertsMalformedResponseToControlledFailure() {
+    void geminiProviderFallsBackAfterMalformedResponse() {
         AIProperties properties = enabledProperties();
         RestTemplate restTemplate = new RestTemplate();
         MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
 
         server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"))
                 .andRespond(withSuccess("not-json", MediaType.APPLICATION_JSON));
+        expectSuccessfulFallback(server);
 
         GeminiAIProvider provider = new GeminiAIProvider(restTemplate, properties, new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
-        assertThrows(IllegalStateException.class, () -> provider.reviewCode("review"));
+        assertTrue(provider.reviewCode("review").contains("\"overallScore\""));
     }
 
     @Test
@@ -162,5 +160,13 @@ class AIProviderTest {
         properties.setBaseUrl("https://generativelanguage.googleapis.com");
         properties.setModel("gemini-2.5-flash");
         return properties;
+    }
+
+    private void expectSuccessfulFallback(MockRestServiceServer server) {
+        server.expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"))
+                .andRespond(withSuccess(
+                        "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{\\\"overallScore\\\":88}\"}]}}]}",
+                        MediaType.APPLICATION_JSON
+                ));
     }
 }

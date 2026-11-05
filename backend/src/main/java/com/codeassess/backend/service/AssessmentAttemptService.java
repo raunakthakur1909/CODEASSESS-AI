@@ -23,11 +23,17 @@ public class AssessmentAttemptService {
     private final AssessmentAttemptRepository attemptRepository;
     private final AssessmentRepository assessmentRepository;
     private final UserRepository userRepository;
+    private final com.codeassess.backend.repository.DraftRepository draftRepository;
 
-    public AssessmentAttemptService(AssessmentAttemptRepository attemptRepository, AssessmentRepository assessmentRepository, UserRepository userRepository) {
+    public AssessmentAttemptService(
+            AssessmentAttemptRepository attemptRepository,
+            AssessmentRepository assessmentRepository,
+            UserRepository userRepository,
+            com.codeassess.backend.repository.DraftRepository draftRepository) {
         this.attemptRepository = attemptRepository;
         this.assessmentRepository = assessmentRepository;
         this.userRepository = userRepository;
+        this.draftRepository = draftRepository;
     }
 
     public AssessmentAttemptResponse startAttempt(Long assessmentId, Long candidateId) {
@@ -46,6 +52,7 @@ public class AssessmentAttemptService {
 
         if (attempt == null) {
             // Create new attempt
+            draftRepository.deleteByCandidateAndAssessment(candidate, assessment);
             attempt = new AssessmentAttempt();
             attempt.setAssessment(assessment);
             attempt.setCandidate(candidate);
@@ -57,6 +64,7 @@ public class AssessmentAttemptService {
             } else if (attempt.getStatus() == AssessmentAttemptStatus.EXPIRED) {
                 // Delete expired attempt and create a new one
                 attemptRepository.delete(attempt);
+                draftRepository.deleteByCandidateAndAssessment(candidate, assessment);
                 attempt = new AssessmentAttempt();
                 attempt.setAssessment(assessment);
                 attempt.setCandidate(candidate);
@@ -64,6 +72,7 @@ public class AssessmentAttemptService {
             } else if (attempt.getExpiresAt() != null && attempt.getExpiresAt().isBefore(LocalDateTime.now())) {
                 // Mark as expired, delete it, and create a new one
                 attemptRepository.delete(attempt);
+                draftRepository.deleteByCandidateAndAssessment(candidate, assessment);
                 attempt = new AssessmentAttempt();
                 attempt.setAssessment(assessment);
                 attempt.setCandidate(candidate);

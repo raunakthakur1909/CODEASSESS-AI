@@ -60,7 +60,7 @@ services:
       AI_MAX_ATTEMPTS: ${AI_MAX_ATTEMPTS}
       AI_RETRY_DELAY_SECONDS: ${AI_RETRY_DELAY_SECONDS}
     ports:
-      - "8080:8080"
+      - "${BACKEND_HOST_PORT:-8080}:8080"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/actuator/health || exit 1"]
       interval: 15s

@@ -15,14 +15,20 @@ public class FlywayConfig {
     private static final Logger logger = LoggerFactory.getLogger(FlywayConfig.class);
 
     private final DataSource dataSource;
+    private final boolean enabled;
 
-    public FlywayConfig(DataSource dataSource) {
+    public FlywayConfig(DataSource dataSource, @Value("${spring.flyway.enabled:true}") boolean enabled) {
         this.dataSource = dataSource;
+        this.enabled = enabled;
     }
 
     @PostConstruct
     public void migrate() {
-        boolean enabled = true;
+        if (!enabled) {
+            logger.info("Flyway migrations are disabled");
+            return;
+        }
+
         String baselineVersion = "1";
         
         Flyway flyway = Flyway.configure()

@@ -183,26 +183,31 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, #2563EB 100%);
-    color: white;
-    border: none;
-    border-radius: var(--radius-md);
+    background: #2dd4bf;
+    color: #000000 !important;
+    border: 1.5px solid #0f766e;
+    border-radius: var(--radius-md, 0.5rem);
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    transition: all var(--transition-fast);
+    box-shadow: 0 4px 14px rgba(45, 212, 191, 0.4);
+    transition: all var(--transition-fast, 0.2s ease);
     margin-top: 1rem;
 }
 
 .review-button:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    background: #14b8a6;
+    color: #000000 !important;
+    box-shadow: 0 6px 18px rgba(20, 184, 166, 0.5);
 }
 
 .review-button:disabled {
-    opacity: 0.6;
+    opacity: 0.75;
     cursor: not-allowed;
+    background: #cbd5e1;
+    color: #1e293b !important;
+    border-color: #94a3b8;
 }
 
 /* Score panel */

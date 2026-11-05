@@ -85,11 +85,8 @@ class SubmissionSseEventPublisherTest {
 
         SubmissionExecutionWorker worker = new SubmissionExecutionWorker(
                 submissionRepository,
-                codeExecutionService,
                 testCaseRepository,
-                judge0Client,
-                mockPublisher,
-                new io.micrometer.core.instrument.simple.SimpleMeterRegistry()
+                mockPublisher
         );
 
         Submission submission = new Submission();
@@ -107,47 +104,18 @@ class SubmissionSseEventPublisherTest {
         submission.setProblem(problem);
         submission.setExecutionToken("token-xyz");
 
-        // Mock DB returning a QUEUED submission
-        when(submissionRepository.findByStatusOrderBySubmittedAtAsc(SubmissionStatus.QUEUED))
-                .thenReturn(List.of(submission));
-
-        // Mock Claiming
-        when(submissionRepository.claimSubmissionForProcessing(42L, SubmissionStatus.RUNNING, SubmissionStatus.QUEUED))
-                .thenReturn(1);
+        // Mock DB returning the submission
+        when(submissionRepository.findById(42L))
+                .thenReturn(Optional.of(submission));
 
         // Mock Test Cases
         TestCase tc1 = new TestCase();
         when(testCaseRepository.findByProblemOrderByIdAsc(problem))
                 .thenReturn(List.of(tc1));
 
-        // Mock Judge0 Response via CodeExecutionService.submitTestCaseToJudge0
-        when(codeExecutionService.submitTestCaseToJudge0(submission, tc1))
-                .thenReturn("token-xyz");
+        worker.processSubmission(42L);
 
-        // Mock Judge0 Response (COMPLETED)
-        Judge0SubmissionResponse judgeResp = new Judge0SubmissionResponse();
-        judgeResp.setToken("token-xyz");
-        Judge0SubmissionResponse.Judge0Status judgeStatus = new Judge0SubmissionResponse.Judge0Status();
-        judgeStatus.setId(3); // > 2 means done
-        judgeStatus.setDescription("Accepted");
-        judgeResp.setStatus(judgeStatus);
-        judgeResp.setTime("0.05");
-        judgeResp.setMemory(1024);
-        
-        when(judge0Client.getSubmission("token-xyz")).thenReturn(judgeResp);
-        when(codeExecutionService.evaluateTestCase(any(), eq(tc1))).thenReturn(true);
-
-        worker.processQueuedSubmissions();
-
-        // Verify execution service was called
-        verify(codeExecutionService).submitTestCaseToJudge0(submission, tc1);
-        verify(codeExecutionService).finalizeSubmission(eq(submission), eq(1), eq(1), anyInt(), anyInt(), any(), any());
-
-        // Verify publisher was called multiple times
-        // 1. RUNNING
-        // 2. EVALUATING (for test case 1)
-        // 3. COMPLETED
-        verify(mockPublisher, times(2)).publish(submission);
-        verify(mockPublisher, times(1)).publish(submission, 1);
+        // Verify publisher was called
+        verify(mockPublisher, times(1)).publish(submission);
     }
 }

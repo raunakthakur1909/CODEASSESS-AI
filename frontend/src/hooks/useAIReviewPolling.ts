@@ -116,6 +116,9 @@ export function useAIReviewPolling(
   }, [enabled, intervalMs, retryKey, submissionId, timeoutMs]);
 
   const retry = () => {
+    if (review?.status === 'FAILED' && submissionId) {
+      void aiReviewService.requestReview(submissionId).catch(() => {});
+    }
     setRetryKey((currentKey) => currentKey + 1);
   };
 

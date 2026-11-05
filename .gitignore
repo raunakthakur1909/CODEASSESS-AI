@@ -77,6 +77,17 @@ yarn-error.log*
 Thumbs.db
 
 # ---------------------------------------------------------------
+# Temporary, backup & build caches
+# ---------------------------------------------------------------
+*.bak
+*.tmp
+*.tsbuildinfo
+scratch/
+**/.replit-artifact/
+.replit
+
+# ---------------------------------------------------------------
 # AI assistant / handoff scaffolding (not part of the product)
 # ---------------------------------------------------------------
 .kiro/
+

@@ -33,94 +33,80 @@ function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <Code2 size={28} />
-          </div>
-          <h1 className="auth-title">Create an account</h1>
-          <p className="auth-subtitle">Start your coding journey with CodeAssess AI</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {error && (
-            <div className="bg-danger-bg text-danger-text px-4 py-3 rounded-md text-sm border border-danger-text/20">
-              {error}
+        <section className="auth-header">
+          <div className="auth-logo"><Code2 size={25} /></div>
+          <h1 className="auth-title">Prove the code.<br />Join the platform.</h1>
+          <p className="auth-subtitle">Create your engineering account to participate in assessments, run code in real-time, and view AI reviews.</p>
+          <div className="auth-protocol"><span /> candidate / assessment / review</div>
+        </section>
+        <section className="auth-form-panel">
+          <div className="auth-kicker">Get started</div>
+          <h2 className="auth-form-title">Create account.</h2>
+          <p className="auth-form-copy">Register to begin your technical evaluations.</p>
+          <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
+            {error && <div className="auth-message auth-message-error" role="alert">{error}</div>}
+            <div className="form-group">
+              <label htmlFor="name" className="form-label">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                minLength={2}
+                className="form-input"
+                placeholder="John Doe"
+              />
             </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="name" className="form-label">
-              Full Name
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              minLength={2}
-              className="form-input"
-              placeholder="John Doe"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              className="form-input"
-              placeholder="name@example.com"
-            />
-          </div>
-
-          <div className="form-group mb-6">
-            <label htmlFor="password" className="form-label">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-              minLength={8}
-              className="form-input"
-              placeholder="••••••••"
-            />
-            <p className="mt-1 text-xs text-muted">Must be at least 8 characters long</p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full justify-center py-2.5 text-base"
-          >
-            {loading ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              <>
-                Register
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
-        </form>
-
-        <p className="mt-8 text-center text-sm text-secondary">
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-primary hover:text-primary-hover">
-            Sign in
-          </Link>
-        </p>
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">Work or Personal Email</label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+                className="form-input"
+                placeholder="name@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">Password</label>
+              <input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                minLength={8}
+                className="form-input"
+                placeholder="Minimum 8 characters"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full mt-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={17} className="animate-spin" />
+                  <span>Creating account...</span>
+                </>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight size={17} />
+                </>
+              )}
+            </button>
+          </form>
+          <p className="auth-register">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        </section>
       </div>
     </div>
   );

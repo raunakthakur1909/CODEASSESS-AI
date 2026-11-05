@@ -17,14 +17,23 @@ public class CodeReviewIssue {
 
     private String suggestion;
 
+    private Integer lineStart;
+
+    private Integer lineEnd;
+
+    private String title;
+
     public CodeReviewIssue() {
     }
 
-    public CodeReviewIssue(ReviewSeverity severity, ReviewCategory category, String message, String suggestion) {
+    public CodeReviewIssue(ReviewSeverity severity, ReviewCategory category, String message, String suggestion, Integer lineStart, Integer lineEnd, String title) {
         this.severity = severity;
         this.category = category;
         this.message = message;
         this.suggestion = suggestion;
+        this.lineStart = lineStart;
+        this.lineEnd = lineEnd;
+        this.title = title;
     }
 
     public ReviewSeverity getSeverity() {
@@ -57,5 +66,29 @@ public class CodeReviewIssue {
 
     public void setSuggestion(String suggestion) {
         this.suggestion = suggestion;
+    }
+
+    public Integer getLineStart() {
+        return lineStart;
+    }
+
+    public void setLineStart(Integer lineStart) {
+        this.lineStart = lineStart;
+    }
+
+    public Integer getLineEnd() {
+        return lineEnd;
+    }
+
+    public void setLineEnd(Integer lineEnd) {
+        this.lineEnd = lineEnd;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }

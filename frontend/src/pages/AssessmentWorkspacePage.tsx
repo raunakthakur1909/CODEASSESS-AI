@@ -17,6 +17,7 @@ import { submissionService } from '../services/submissionService';
 import type { Submission } from '../services/submissionService';
 import SubmissionHistory from '../components/assessment/SubmissionHistory';
 import { Loader2 } from 'lucide-react';
+import { getStarterTemplate } from '../utils/starterTemplates';
 import './AssessmentWorkspacePage.css';
 
 interface AssessmentData {
@@ -77,6 +78,7 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
     const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isFirstLoadRef = useRef(true);
     const loadedForProblemRef = useRef<number | null>(null);
+    const editorRef = useRef<any>(null);
 
     useEffect(() => {
         if (activeTab === 'submissions' && activeProblemId) {
@@ -160,21 +162,16 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
 
         isFirstLoadRef.current = true;
 
-        const applyStarterCode = () => {
+        const initEmptyWorkspace = () => {
             setLanguage(problem.starterLanguage ?? DEFAULT_LANGUAGE);
-            setCode(problem.starterCode ?? '');
+            setCode('');
         };
 
         const loadEditorContent = async () => {
             try {
-                const localDraft = draftService.getLocalDraft(assessmentId, activeProblemId);
                 const serverDraft = await draftService.getDraft(assessmentId, activeProblemId);
 
-                const serverIsNewer = serverDraft && (
-                    !localDraft || new Date(serverDraft.updatedAt) > new Date(localDraft.updatedAt)
-                );
-
-                if (serverDraft && serverIsNewer) {
+                if (serverDraft && serverDraft.sourceCode !== undefined && serverDraft.sourceCode !== null) {
                     setLanguage(serverDraft.language);
                     setCode(serverDraft.sourceCode);
                     draftService.saveLocalDraft(
@@ -183,15 +180,14 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
                         serverDraft.language,
                         serverDraft.sourceCode
                     );
-                } else if (localDraft) {
-                    setLanguage(localDraft.language);
-                    setCode(localDraft.sourceCode);
                 } else {
-                    applyStarterCode();
+                    // When starting solving the problem, no draft exists -> editor starts empty
+                    draftService.clearLocalDraft(assessmentId, activeProblemId);
+                    initEmptyWorkspace();
                 }
             } catch (err) {
-                console.error('Failed to load draft, falling back to starter code', err);
-                applyStarterCode();
+                console.error('Failed to load draft, initializing empty workspace', err);
+                initEmptyWorkspace();
             } finally {
                 isFirstLoadRef.current = false;
             }
@@ -279,6 +275,35 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
 
     const activeProblem = problems.find(p => p.id === activeProblemId) || null;
 
+    const handleLanguageChange = (newLang: string) => {
+        setLanguage(newLang);
+    };
+
+    const handleInsertTemplate = () => {
+        const template = getStarterTemplate(activeProblem, language);
+        setCode(template);
+        if (editorRef.current) {
+            editorRef.current.setValue(template);
+        }
+        if (activeProblemId) {
+            draftService.saveLocalDraft(assessmentId, activeProblemId, language, template);
+            draftService.saveDraft(assessmentId, activeProblemId, { language, sourceCode: template })
+                .catch(() => {});
+        }
+    };
+
+    const handleClear = () => {
+        setCode('');
+        if (editorRef.current) {
+            editorRef.current.setValue('');
+        }
+        if (activeProblemId) {
+            draftService.clearLocalDraft(assessmentId, activeProblemId);
+            draftService.saveDraft(assessmentId, activeProblemId, { language, sourceCode: '' })
+                .catch(() => {});
+        }
+    };
+
     return (
         <div className="assessment-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
             <AssessmentHeader 
@@ -339,6 +364,9 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
                                     if(window.confirm('Load this submission into the editor? Your current draft will be overwritten.')) {
                                         setLanguage(sub.language);
                                         setCode(sub.sourceCode);
+                                        if (editorRef.current) {
+                                            editorRef.current.setValue(sub.sourceCode);
+                                        }
                                     }
                                 }
                             }} />
@@ -362,8 +390,30 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
                     )}
 
                     <div className="assessment-toolbar">
-                        <div className="assessment-toolbar-left">
-                            <LanguageSelector value={language} onChange={setLanguage} disabled={isExpired || isRunning || isSubmitting} />
+                        <div className="assessment-toolbar-left" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <LanguageSelector value={language} onChange={handleLanguageChange} disabled={isExpired || isRunning || isSubmitting} />
+                            <button
+                                id="starter-template-btn"
+                                type="button"
+                                onClick={handleInsertTemplate}
+                                disabled={isExpired || isRunning || isSubmitting}
+                                className="btn btn-secondary"
+                                style={{ fontSize: '12px', padding: '6px 12px' }}
+                                title={`Load starter template for ${language}`}
+                            >
+                                Starter Template
+                            </button>
+                            <button
+                                id="clear-code-btn"
+                                type="button"
+                                onClick={handleClear}
+                                disabled={isExpired || isRunning || isSubmitting}
+                                className="btn btn-secondary"
+                                style={{ fontSize: '12px', padding: '6px 12px' }}
+                                title="Clear editor"
+                            >
+                                Clear
+                            </button>
                         </div>
                         <div className="assessment-toolbar-right">
                             {warningMessage && (
@@ -427,6 +477,7 @@ const AssessmentWorkspacePage: React.FC<AssessmentWorkspacePageProps> = ({ asses
                             language={language}
                             value={code}
                             onChange={(val) => setCode(val || '')}
+                            onMount={(editor) => { editorRef.current = editor; }}
                             readOnly={isExpired || isRunning || isSubmitting}
                         />
 

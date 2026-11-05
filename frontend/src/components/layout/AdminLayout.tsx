@@ -1,116 +1,103 @@
+import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Users,
-  Settings,
+import {
+  BarChart3,
+  BookOpenCheck,
+  Code2,
+  LayoutDashboard,
+  LineChart,
   LogOut,
-  Bell,
-  ShieldCheck
+  Menu,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
 import { authService } from '../../services/authService';
+import { NotificationsDropdown } from './NotificationsDropdown';
+import { ThemeToggle } from './ThemeToggle';
+
+const navItems = [
+  { name: 'Admin home', path: '/admin', icon: LayoutDashboard },
+  { name: 'Manage assessments', path: '/admin/assessments', icon: BookOpenCheck },
+  { name: 'Analytics', path: '/admin/analytics', icon: LineChart },
+  { name: 'AI analytics', path: '/admin/analytics/ai', icon: BarChart3 },
+];
+
+function Brand() {
+  return (
+    <Link to="/admin" className="brand-mark" aria-label="CodeAssess AI admin home">
+      <span className="brand-icon"><Code2 size={19} strokeWidth={2.6} /></span>
+      <span className="brand-copy">
+        <strong>CodeAssess</strong>
+        <small>AI / admin console</small>
+      </span>
+    </Link>
+  );
+}
 
 export default function AdminLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
 
-  const handleLogout = () => {
+  const logout = () => {
     authService.logout();
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
-    { name: 'Assessments', path: '/admin/assessments', icon: BookOpen },
-    { name: 'Candidates', path: '/admin/candidates', icon: Users },
-    { name: 'Settings', path: '/admin/settings', icon: Settings },
-  ];
-
   return (
-    <div className="app-container">
-      {/* Sidebar */}
-      <aside className="w-64 bg-bg-sidebar text-white border-r border-border-light flex flex-col hidden md:flex" style={{ width: '256px', flexShrink: 0, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-sidebar)', color: 'var(--text-primary)', borderRight: '1px solid var(--border-light)' }}>
-        <div className="p-6 flex items-center gap-3">
-          <div className="text-white bg-primary p-1.5 rounded-md" style={{ backgroundColor: 'var(--primary)' }}>
-            <ShieldCheck size={24} color="white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight" style={{ color: 'white' }}>CodeAssess Admin</span>
+    <div className="app-container noise">
+      {sidebarOpen && <button className="sidebar-scrim" type="button" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" />}
+      <aside className={`app-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
+        <div className="sidebar-top">
+          <Brand />
+          <button type="button" className="icon-button mobile-only" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><X size={17} /></button>
         </div>
-
-        <nav className="flex-1 px-4 py-4 flex flex-col gap-1" style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {navItems.map((item) => {
-            // Active if exact match for /admin or starts with the path for sub-routes
-            const isActive = item.path === '/admin' 
+        <div className="sidebar-label">Admin console</div>
+        <nav className="sidebar-nav" aria-label="Admin navigation">
+          {navItems.map(({ name, path, icon: Icon }) => {
+            const active = path === '/admin'
               ? location.pathname === '/admin'
-              : location.pathname.startsWith(item.path);
-            
-            const Icon = item.icon;
-            
+              : location.pathname.startsWith(path);
             return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors`}
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '6px', fontSize: '14px', fontWeight: 500,
-                  backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
-                  color: isActive ? 'var(--primary-hover)' : 'var(--text-secondary)',
-                  textDecoration: 'none'
-                }}
-              >
-                <Icon size={18} />
-                {item.name}
+              <Link key={`${name}-${path}`} to={path} onClick={() => setSidebarOpen(false)} className={`sidebar-link ${active ? 'is-active' : ''}`}>
+                <Icon size={16} />
+                <span>{name}</span>
+                {active && <span className="sidebar-active-dot" />}
               </Link>
             );
           })}
         </nav>
-
-        <div className="p-4 border-t border-border-light" style={{ padding: '16px', borderTop: '1px solid var(--border-light)' }}>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-md text-sm font-medium transition-colors"
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', padding: '10px 12px', borderRadius: '6px', fontSize: '14px', fontWeight: 500, backgroundColor: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--danger)' }}
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
+        <div className="sidebar-footer">
+          <div className="engine-card">
+            <div className="engine-heading"><ShieldCheck size={14} /> Admin access</div>
+            <p>Assessment operations, candidate access, and review signal in one place.</p>
+            <span className="engine-status"><span /> RBAC protected</span>
+          </div>
+          <div className="account-row">
+            <span className="avatar">{(user?.email?.[0] || 'A').toUpperCase()}</span>
+            <div className="account-copy">
+              <strong>{user?.email?.split('@')[0] || 'Administrator'}</strong>
+              <small>admin account</small>
+            </div>
+            <button type="button" className="icon-button" onClick={logout} aria-label="Log out"><LogOut size={15} /></button>
+          </div>
         </div>
       </aside>
-
-      {/* Main Content */}
       <div className="main-content">
-        {/* Top Header */}
-        <header className="h-16 bg-bg-card border-b border-border-light px-6 flex items-center justify-between" style={{ height: '64px', backgroundColor: 'var(--bg-card)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-light)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div className="md:hidden flex items-center gap-3">
-            <div className="text-primary">
-              <ShieldCheck size={24} />
-            </div>
-            <span className="font-bold">Admin</span>
+        <header className="topbar">
+          <div className="topbar-left">
+            <button type="button" className="icon-button mobile-only" onClick={() => setSidebarOpen(true)} aria-label="Open navigation"><Menu size={18} /></button>
+            <div className="breadcrumb"><span>admin</span><b>/</b><span>{location.pathname === '/admin' ? 'overview' : location.pathname.slice('/admin/'.length).split('/')[0]}</span></div>
           </div>
-          
-          <div className="hidden md:block"></div> {/* Spacer */}
-
-          <div className="flex items-center gap-4" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <button className="text-text-secondary hover:text-text-primary transition-colors bg-transparent border-none cursor-pointer">
-              <Bell size={20} />
-            </button>
-            
-            <div className="flex items-center gap-2 pl-4 border-l border-border-light" style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: '16px', borderLeft: '1px solid var(--border-light)' }}>
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm" style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}>
-                A
-              </div>
-              <span className="text-sm font-medium hidden sm:block" style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)' }}>
-                {user?.email?.split('@')[0] || 'Administrator'}
-              </span>
-            </div>
+          <div className="topbar-actions">
+            <span className="connection-pill"><span /> API connected</span>
+            <NotificationsDropdown />
+            <ThemeToggle />
+            <div className="topbar-user"><span className="avatar avatar-small">{(user?.email?.[0] || 'A').toUpperCase()}</span><span>{user?.email?.split('@')[0] || 'Administrator'}</span></div>
           </div>
         </header>
-
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-transparent p-6" style={{ flex: 1, overflowY: 'auto', backgroundColor: 'transparent', padding: '24px' }}>
-          <Outlet />
-        </main>
+        <main className="page-content"><Outlet /></main>
       </div>
     </div>
   );

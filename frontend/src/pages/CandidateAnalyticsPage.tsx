@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { analyticsService } from '../services/analyticsService';
+import { authService } from '../services/authService';
 import type { CandidateAnalytics } from '../types/analytics';
 
 import CandidatePerformance from '../components/analytics/CandidatePerformance';
@@ -117,6 +118,14 @@ function CandidateAnalyticsPage({ candidateId, onBack }: CandidateAnalyticsPageP
 
   if (!data) return null;
 
+  const currentUser = authService.getCurrentUser();
+  const displayName = (data.candidateName && data.candidateName !== 'Unknown')
+    ? data.candidateName
+    : (currentUser?.email?.split('@')[0] || 'Candidate');
+  const displayEmail = (data.candidateEmail && data.candidateEmail !== 'unknown@example.com')
+    ? data.candidateEmail
+    : (currentUser?.email || 'candidate@codeassess.local');
+
   return (
     <main className="an-shell" aria-label="Candidate analytics dashboard">
       
@@ -125,9 +134,9 @@ function CandidateAnalyticsPage({ candidateId, onBack }: CandidateAnalyticsPageP
           <p className="an-header__kicker">
             Candidate Profile
           </p>
-          <h1 className="an-header__title">{data.candidateName}</h1>
+          <h1 className="an-header__title">{displayName}</h1>
           <p className="an-header__subtitle">
-            {data.candidateEmail} &middot; ID: {data.candidateId}
+            {displayEmail} &middot; ID: {data.candidateId}
           </p>
         </div>
         <button type="button" className="an-back-btn" onClick={onBack}>

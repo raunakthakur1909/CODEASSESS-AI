@@ -9,6 +9,9 @@ public class CodeReviewIssueResponse {
     private ReviewCategory category;
     private String message;
     private String suggestion;
+    private Integer lineStart;
+    private Integer lineEnd;
+    private String title;
 
     public CodeReviewIssueResponse() {
     }
@@ -44,4 +47,11 @@ public class CodeReviewIssueResponse {
     public void setSuggestion(String suggestion) {
         this.suggestion = suggestion;
     }
+
+    public Integer getLineStart() { return lineStart; }
+    public void setLineStart(Integer lineStart) { this.lineStart = lineStart; }
+    public Integer getLineEnd() { return lineEnd; }
+    public void setLineEnd(Integer lineEnd) { this.lineEnd = lineEnd; }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 }

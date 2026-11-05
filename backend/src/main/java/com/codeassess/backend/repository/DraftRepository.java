@@ -14,4 +14,6 @@ public interface DraftRepository extends JpaRepository<Draft, Long> {
 
     Optional<Draft> findByCandidateAndAssessmentAndProblem(User candidate, Assessment assessment, Problem problem);
 
+    void deleteByCandidateAndAssessment(User candidate, Assessment assessment);
+
 }

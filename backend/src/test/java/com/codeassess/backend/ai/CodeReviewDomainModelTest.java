@@ -22,7 +22,10 @@ class CodeReviewDomainModelTest {
                 ReviewSeverity.MEDIUM,
                 ReviewCategory.CODE_QUALITY,
                 "Input parsing could be separated from business logic",
-                "Extract input handling into a separate method."
+                "Extract input handling into a separate method.",
+                null,
+                null,
+                "Parsing Logic"
         );
         review.getIssues().add(issue);
 

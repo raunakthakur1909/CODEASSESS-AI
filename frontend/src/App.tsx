@@ -1,6 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import type { ReactElement } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from './services/authService';
+import { assessmentService } from './services/assessmentService';
+
+// Context
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layouts
 import AppLayout from './components/layout/AppLayout';
@@ -63,8 +68,22 @@ function AssessmentBuilderWrapper() {
 function AdminAnalyticsWrapper() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const assessmentId = id ? Number(id) : Number(params.get('assessmentId') ?? '0');
+  const [searchParams] = useSearchParams();
+  const paramId = id ? Number(id) : Number(searchParams.get('assessmentId') ?? '0');
+  const [assessmentId, setAssessmentId] = useState<number>(paramId);
+
+  useEffect(() => {
+    if (paramId > 0) {
+      setAssessmentId(paramId);
+    } else {
+      assessmentService.getAllAssessments().then((list) => {
+        if (list && list.length > 0) {
+          setAssessmentId(list[0].id);
+        }
+      }).catch(console.error);
+    }
+  }, [paramId]);
+
   return (
     <AdminAnalyticsPage
       assessmentId={assessmentId}
@@ -77,8 +96,22 @@ function AdminAnalyticsWrapper() {
 function AIAnalyticsWrapper() {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const assessmentId = id ? Number(id) : Number(params.get('assessmentId') ?? '0');
+  const [searchParams] = useSearchParams();
+  const paramId = id ? Number(id) : Number(searchParams.get('assessmentId') ?? '0');
+  const [assessmentId, setAssessmentId] = useState<number>(paramId);
+
+  useEffect(() => {
+    if (paramId > 0) {
+      setAssessmentId(paramId);
+    } else {
+      assessmentService.getAllAssessments().then((list) => {
+        if (list && list.length > 0) {
+          setAssessmentId(list[0].id);
+        }
+      }).catch(console.error);
+    }
+  }, [paramId]);
+
   return (
     <AIAnalyticsPage
       assessmentId={assessmentId}
@@ -101,8 +134,22 @@ function CandidateAnalyticsWrapper() {
 /** /leaderboard?assessmentId=N */
 function LeaderboardWrapper() {
   const navigate = useNavigate();
-  const params = new URLSearchParams(window.location.search);
-  const assessmentId = Number(params.get('assessmentId') ?? '0');
+  const [searchParams] = useSearchParams();
+  const paramId = Number(searchParams.get('assessmentId') ?? '0');
+  const [assessmentId, setAssessmentId] = useState<number>(paramId);
+
+  useEffect(() => {
+    if (paramId > 0) {
+      setAssessmentId(paramId);
+    } else {
+      assessmentService.getAvailableAssessments().then((list) => {
+        if (list && list.length > 0) {
+          setAssessmentId(list[0].id);
+        }
+      }).catch(console.error);
+    }
+  }, [paramId]);
+
   return (
     <LeaderboardPage
       assessmentId={assessmentId}
@@ -150,60 +197,66 @@ function App() {
   const defaultDash = user?.role === 'ADMIN' ? '/admin' : '/dashboard';
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/login" element={isAuthenticated ? <Navigate to={defaultDash} replace /> : <Login />} />
-        <Route path="/register" element={isAuthenticated ? <Navigate to={defaultDash} replace /> : <Register />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/login" element={isAuthenticated ? <Navigate to={defaultDash} replace /> : <Login />} />
+          <Route path="/register" element={isAuthenticated ? <Navigate to={defaultDash} replace /> : <Register />} />
 
-        {/* Admin */}
-        <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="assessments" element={<AssessmentsListPage />} />
-          <Route path="assessments/new" element={<AssessmentBuilderWrapper />} />
-          <Route path="assessments/:id/edit" element={<AssessmentBuilderWrapper />} />
-          <Route path="analytics" element={<AdminAnalyticsWrapper />} />
-          <Route path="analytics/:id" element={<AdminAnalyticsWrapper />} />
-          <Route path="analytics/ai" element={<AIAnalyticsWrapper />} />
-          <Route path="analytics/ai/:id" element={<AIAnalyticsWrapper />} />
-        </Route>
+          {/* Admin */}
+          <Route path="/admin" element={<ProtectedRoute requiredRole="ADMIN"><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="assessments" element={<AssessmentsListPage />} />
+            <Route path="assessments/new" element={<AssessmentBuilderWrapper />} />
+            <Route path="assessments/:id/edit" element={<AssessmentBuilderWrapper />} />
+            <Route path="analytics" element={<AdminAnalyticsWrapper />} />
+            <Route path="analytics/:id" element={<AdminAnalyticsWrapper />} />
+            <Route path="analytics/ai" element={<AIAnalyticsWrapper />} />
+            <Route path="analytics/ai/:id" element={<AIAnalyticsWrapper />} />
+          </Route>
 
-        {/* Candidate – with sidebar layout */}
-        <Route path="/dashboard" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<CandidateDashboard />} />
-        </Route>
+          {/* Candidate – with sidebar layout */}
+          <Route path="/dashboard" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<CandidateDashboard />} />
+          </Route>
 
-        <Route path="/assessments" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<AssessmentsListPage />} />
-        </Route>
+          <Route path="/assessments" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<AssessmentsListPage />} />
+          </Route>
 
-        <Route path="/analytics" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<CandidateAnalyticsWrapper />} />
-        </Route>
+          <Route path="/analytics" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<CandidateAnalyticsWrapper />} />
+          </Route>
 
-        <Route path="/leaderboard" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-          <Route index element={<LeaderboardWrapper />} />
-        </Route>
+          <Route path="/leaderboard" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            <Route index element={<LeaderboardWrapper />} />
+          </Route>
 
-        {/* Full-screen pages (no layout wrapper) */}
-        <Route
-          path="/assessments/:id/attempt"
-          element={<ProtectedRoute><AssessmentWorkspaceWrapper /></ProtectedRoute>}
-        />
-        <Route
-          path="/submissions/:id"
-          element={<ProtectedRoute><SubmissionResultWrapper /></ProtectedRoute>}
-        />
-        <Route
-          path="/submissions/:id/ai-review"
-          element={<ProtectedRoute><AIReviewWrapper /></ProtectedRoute>}
-        />
+          {/* Full-screen pages (no layout wrapper) */}
+          <Route
+            path="/assessments/:id/attempt"
+            element={<ProtectedRoute><AssessmentWorkspaceWrapper /></ProtectedRoute>}
+          />
+          <Route
+            path="/submissions/:id"
+            element={<ProtectedRoute><SubmissionResultWrapper /></ProtectedRoute>}
+          />
+          <Route
+            path="/submissions/:id/result"
+            element={<ProtectedRoute><SubmissionResultWrapper /></ProtectedRoute>}
+          />
+          <Route
+            path="/submissions/:id/ai-review"
+            element={<ProtectedRoute><AIReviewWrapper /></ProtectedRoute>}
+          />
 
-        {/* Root & catch-all */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? defaultDash : '/login'} replace />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Root & catch-all */}
+          <Route path="/" element={<Navigate to={isAuthenticated ? defaultDash : '/login'} replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

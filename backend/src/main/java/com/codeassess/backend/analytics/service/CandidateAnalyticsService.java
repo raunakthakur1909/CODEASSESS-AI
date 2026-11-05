@@ -1,13 +1,15 @@
 package com.codeassess.backend.analytics.service;
 
 import com.codeassess.backend.analytics.dto.CandidateAnalyticsResponse;
-import com.codeassess.backend.submission.SubmissionResult;
+import com.codeassess.backend.exception.ResourceNotFoundException;
 import com.codeassess.backend.model.User;
 import com.codeassess.backend.repository.CodeReviewRepository;
 import com.codeassess.backend.repository.SubmissionRepository;
-import org.springframework.stereotype.Service;
+import com.codeassess.backend.repository.UserRepository;
+import com.codeassess.backend.submission.SubmissionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 /**
  * Service for calculating individual candidate analytics.
@@ -25,13 +27,16 @@ public class CandidateAnalyticsService {
 
     private final SubmissionRepository submissionRepository;
     private final CodeReviewRepository codeReviewRepository;
+    private final UserRepository userRepository;
 
     public CandidateAnalyticsService(
             SubmissionRepository submissionRepository,
-                            CodeReviewRepository codeReviewRepository
+            CodeReviewRepository codeReviewRepository,
+            UserRepository userRepository
     ) {
         this.submissionRepository = submissionRepository;
         this.codeReviewRepository = codeReviewRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -48,9 +53,13 @@ public class CandidateAnalyticsService {
     public CandidateAnalyticsResponse getCandidateAnalytics(Long candidateId) {
         logger.debug("Calculating analytics for candidate: {}", candidateId);
 
-        // Create a minimal User object for repository queries
-        User candidate = new User();
-        candidate.setId(candidateId);
+        User candidate = userRepository.findById(candidateId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidate not found with id: " + candidateId));
+
+        String candidateName = candidate.getName() != null && !candidate.getName().isBlank()
+                ? candidate.getName()
+                : (candidate.getEmail() != null ? candidate.getEmail().split("@")[0] : "Candidate");
+        String candidateEmail = candidate.getEmail() != null ? candidate.getEmail() : "";
 
         // Submission metrics
         long assessmentsAttempted = submissionRepository.countDistinctAssessmentsByCandidate(candidate);
@@ -73,8 +82,8 @@ public class CandidateAnalyticsService {
 
         CandidateAnalyticsResponse response = new CandidateAnalyticsResponse(
                 candidateId,
-                "Unknown", // Name would need to be fetched from UserRepository if needed
-                "unknown@example.com", // Email would need to be fetched from UserRepository if needed
+                candidateName,
+                candidateEmail,
                 Math.toIntExact(assessmentsAttempted),
                 Math.toIntExact(totalSubmissions),
                 Math.toIntExact(acceptedCount),
@@ -86,8 +95,8 @@ public class CandidateAnalyticsService {
                 averageAiReviewScore != null ? Math.round(averageAiReviewScore * 100.0) / 100.0 : null
         );
 
-        logger.debug("Candidate analytics calculated: {} submissions, {:.2f}% acceptance rate",
-                totalSubmissions, acceptanceRate);
+        logger.debug("Candidate analytics calculated for {}: {} submissions, {:.2f}% acceptance rate",
+                candidateEmail, totalSubmissions, acceptanceRate);
 
         return response;
     }

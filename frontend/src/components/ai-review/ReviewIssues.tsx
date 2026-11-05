@@ -72,13 +72,19 @@ function ReviewIssues({ issues }: ReviewIssuesProps) {
       {visibleIssues.length > 0 ? (
         <div className="issue-list">
           {visibleIssues.map((issue, index) => (
-            <article className="issue-item" key={`${issue.message}-${index}`}>
-              <div className="issue-meta">
+            <article className="issue-item" key={`${issue.title || issue.message}-${index}`}>
+              <div className="issue-meta" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <span className="severity-badge" data-severity={issue.severity}>{issue.severity}</span>
                 <span>{formatCategory(issue.category)}</span>
                 <span className="severity-label">{severityLabels[issue.severity]}</span>
+                {issue.lineStart && (
+                  <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Line {issue.lineStart}{issue.lineEnd && issue.lineEnd !== issue.lineStart ? `-${issue.lineEnd}` : ''}
+                  </span>
+                )}
               </div>
-              <p>{issue.message}</p>
+              {issue.title && <h3 style={{ margin: '0.5rem 0', fontSize: '1.05rem', color: 'var(--text-primary)' }}>{issue.title}</h3>}
+              <p style={{ marginTop: '0.25rem' }}>{issue.message}</p>
               <div className="issue-suggestion">
                 <strong>Remediation</strong>
                 <span>{issue.suggestion}</span>

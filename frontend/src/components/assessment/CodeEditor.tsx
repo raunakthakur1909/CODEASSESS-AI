@@ -6,9 +6,10 @@ interface CodeEditorProps {
     value: string;
     onChange: (value: string | undefined) => void;
     readOnly?: boolean;
+    onMount?: (editor: any, monaco: any) => void;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, readOnly = false, onMount }) => {
     
     // Map our backend languages to Monaco languages
     const monacoLanguage = language.toLowerCase() === 'cpp' ? 'cpp' :
@@ -24,6 +25,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ language, value, onChange, read
                 theme="vs-dark"
                 value={value}
                 onChange={onChange}
+                onMount={onMount}
                 options={{
                     readOnly,
                     minimap: { enabled: false },

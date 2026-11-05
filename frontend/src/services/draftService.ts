@@ -51,5 +51,34 @@ export const draftService = {
             return JSON.parse(data) as { language: string, sourceCode: string, updatedAt: string };
         }
         return null;
+    },
+
+    clearLocalDraft: (assessmentId: number, problemId: number) => {
+        const key = `draft_${assessmentId}_${problemId}`;
+        localStorage.removeItem(key);
+    },
+
+    clearLocalDrafts: (assessmentId: number) => {
+        try {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith(`draft_${assessmentId}_`)) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (e) {
+            console.error('Failed to clear local drafts', e);
+        }
+    },
+
+    clearAllDrafts: () => {
+        try {
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('draft_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (e) {
+            console.error('Failed to clear all drafts', e);
+        }
     }
 };

@@ -74,7 +74,7 @@ class CodeReviewServiceTest {
         submission.setProblem(new Problem());
 
         when(submissionRepository.findById(1L)).thenReturn(Optional.of(submission));
-        when(codeReviewRepository.existsBySubmission(submission)).thenReturn(false);
+        when(codeReviewRepository.findBySubmission(submission)).thenReturn(Optional.empty());
         when(codeReviewRepository.save(any(CodeReview.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         CodeReviewResponse response = service.generateReview(1L, 10L);
@@ -98,7 +98,9 @@ class CodeReviewServiceTest {
         submission.setProblem(new Problem());
 
         when(submissionRepository.findById(2L)).thenReturn(Optional.of(submission));
-        when(codeReviewRepository.existsBySubmission(submission)).thenReturn(true);
+        CodeReview existingReview = new CodeReview();
+        existingReview.setStatus(ReviewStatus.COMPLETED);
+        when(codeReviewRepository.findBySubmission(submission)).thenReturn(Optional.of(existingReview));
 
         assertThrows(ConflictException.class, () -> service.generateReview(2L, 10L));
     }

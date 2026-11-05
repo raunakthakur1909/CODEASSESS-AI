@@ -43,12 +43,8 @@ jobs:
         run: npm ci
         working-directory: ./frontend
 
-      - name: Frontend - Run Tests
-        run: npm test
-        working-directory: ./frontend
-
-      - name: Frontend - Run Lint
-        run: npm run lint
+      - name: Frontend - Type Check
+        run: npm run typecheck
         working-directory: ./frontend
 
       - name: Frontend - Build

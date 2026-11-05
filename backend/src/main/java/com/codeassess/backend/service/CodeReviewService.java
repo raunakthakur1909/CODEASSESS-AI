@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -67,7 +68,16 @@ public class CodeReviewService {
             throw new IllegalStateException("AI review can only be generated for completed submissions");
         }
 
-        if (codeReviewRepository.existsBySubmission(submission)) {
+        Optional<CodeReview> existingReview = codeReviewRepository.findBySubmission(submission);
+        if (existingReview.isPresent()) {
+            CodeReview existing = existingReview.get();
+            if (existing.getStatus() == ReviewStatus.FAILED) {
+                existing.setStatus(ReviewStatus.PENDING);
+                existing.setAttemptCount(0);
+                existing.setNextAttemptAt(null);
+                existing.setLastError(null);
+                return CodeReviewResponse.fromEntity(codeReviewRepository.save(existing));
+            }
             throw new ConflictException("A review already exists for this submission");
         }
 
@@ -170,9 +180,9 @@ public class CodeReviewService {
         review.setComplexityTime(payload.getTimeComplexity());
         review.setComplexitySpace(payload.getSpaceComplexity());
 
-        review.setStrengths(payload.getStrengths() != null ? payload.getStrengths() : new ArrayList<>());
-        review.setOptimizationSuggestions(payload.getOptimizationSuggestions() != null ? payload.getOptimizationSuggestions() : new ArrayList<>());
-        review.setSecurityIssues(payload.getSecurityIssues() != null ? payload.getSecurityIssues() : new ArrayList<>());
+        review.setStrengths(payload.getStrengths() != null ? new ArrayList<>(payload.getStrengths()) : new ArrayList<>());
+        review.setOptimizationSuggestions(payload.getOptimizationSuggestions() != null ? new ArrayList<>(payload.getOptimizationSuggestions()) : new ArrayList<>());
+        review.setSecurityIssues(payload.getSecurityIssues() != null ? new ArrayList<>(payload.getSecurityIssues()) : new ArrayList<>());
 
         List<CodeReviewIssue> issues = new ArrayList<>();
         if (payload.getIssues() != null) {
@@ -185,11 +195,48 @@ public class CodeReviewService {
                 ReviewCategory category = issuePayload.getCategory() != null ? issuePayload.getCategory() : ReviewCategory.CODE_QUALITY;
                 String message = issuePayload.getMessage() != null ? issuePayload.getMessage() : "No issue details provided";
                 String suggestion = issuePayload.getSuggestion() != null ? issuePayload.getSuggestion() : "Review the code carefully";
+                Integer lineStart = issuePayload.getLineStart();
+                Integer lineEnd = issuePayload.getLineEnd();
+                String title = issuePayload.getTitle();
 
-                issues.add(new CodeReviewIssue(severity, category, message, suggestion));
+                issues.add(new CodeReviewIssue(severity, category, message, suggestion, lineStart, lineEnd, title));
             }
         }
         review.setIssues(issues);
+
+        review.setCorrectedCode(payload.getCorrectedCode());
+        review.setExplanationOfCorrection(payload.getExplanationOfCorrection());
+
+        if (payload.getOptimizationAnalysis() != null) {
+            com.codeassess.backend.ai.CodeReviewOptimization opt = new com.codeassess.backend.ai.CodeReviewOptimization();
+            opt.setCurrentApproach(payload.getOptimizationAnalysis().getCurrentApproach());
+            opt.setOptimizedApproach(payload.getOptimizationAnalysis().getOptimizedApproach());
+            opt.setCurrentTimeComplexity(payload.getOptimizationAnalysis().getCurrentTimeComplexity());
+            opt.setCurrentSpaceComplexity(payload.getOptimizationAnalysis().getCurrentSpaceComplexity());
+            opt.setOptimizedTimeComplexity(payload.getOptimizationAnalysis().getOptimizedTimeComplexity());
+            opt.setOptimizedSpaceComplexity(payload.getOptimizationAnalysis().getOptimizedSpaceComplexity());
+            opt.setExplanation(payload.getOptimizationAnalysis().getExplanation());
+            opt.setOptimizedCode(payload.getOptimizationAnalysis().getOptimizedCode());
+            review.setOptimizationAnalysis(opt);
+        } else {
+            review.setOptimizationAnalysis(null);
+        }
+
+        if (payload.getGeneratedEdgeCases() != null) {
+            review.setGeneratedEdgeCases(payload.getGeneratedEdgeCases().stream().map(ec ->
+                new com.codeassess.backend.ai.CodeReviewEdgeCase(ec.getDescription(), ec.getInput(), ec.getExpectedBehavior(), ec.getReason())
+            ).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        } else {
+            review.setGeneratedEdgeCases(new ArrayList<>());
+        }
+
+        if (payload.getFailureDiagnoses() != null) {
+            review.setFailureDiagnoses(payload.getFailureDiagnoses().stream().map(fd ->
+                new com.codeassess.backend.ai.CodeReviewFailureDiagnosis(fd.getTestCaseId(), fd.getFailureReason(), fd.getLikelyFault(), fd.getExplanation(), fd.getSuggestedFix())
+            ).collect(java.util.stream.Collectors.toCollection(ArrayList::new)));
+        } else {
+            review.setFailureDiagnoses(new ArrayList<>());
+        }
     }
 
     private void handleProcessingFailure(CodeReview review, Exception exception) {

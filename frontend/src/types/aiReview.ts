@@ -24,6 +24,35 @@ export interface CodeReviewIssue {
   category: ReviewCategory;
   message: string;
   suggestion: string;
+  lineStart?: number;
+  lineEnd?: number;
+  title: string;
+}
+
+export interface CodeReviewOptimization {
+  currentApproach: string;
+  optimizedApproach: string;
+  currentTimeComplexity: string;
+  currentSpaceComplexity: string;
+  optimizedTimeComplexity: string;
+  optimizedSpaceComplexity: string;
+  explanation: string;
+  optimizedCode: string;
+}
+
+export interface CodeReviewEdgeCase {
+  description: string;
+  input: string;
+  expectedBehavior: string;
+  reason: string;
+}
+
+export interface CodeReviewFailureDiagnosis {
+  testCaseId: string;
+  failureReason: string;
+  likelyFault: string;
+  explanation: string;
+  suggestedFix: string;
 }
 
 export interface CodeReview {
@@ -41,6 +70,12 @@ export interface CodeReview {
   securityIssues: string[];
 
   issues: CodeReviewIssue[];
+
+  correctedCode?: string;
+  explanationOfCorrection?: string;
+  optimizationAnalysis?: CodeReviewOptimization;
+  generatedEdgeCases?: CodeReviewEdgeCase[];
+  failureDiagnoses?: CodeReviewFailureDiagnosis[];
 
   status: ReviewStatus;
 
